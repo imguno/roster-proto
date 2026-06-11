@@ -4,8 +4,7 @@ package roster.agent.v1;
 
 option go_package = "github.com/roster-io/roster/proto";
 
-// AgentService is the gRPC service exposed by an SDK process (Python or Node.js).
-// The hub calls this to execute an agent when an event arrives at a Desk.
+// AgentService handles agent execution.
 service AgentService {
   rpc Execute(TaskRequest) returns (TaskResponse);
 }
@@ -20,13 +19,22 @@ message TaskRequest {
   repeated Note     notes     = 6;
   repeated Message  session   = 7;
   repeated Resource resources = 8;
+  map<string, string> options = 9;  // executor params from desk config
+  map<string, string> env     = 10; // executor env from desk config
 }
 
 message TaskResponse {
-  repeated EmitEvent  emissions    = 1;
-  repeated NoteUpdate note_updates = 2;
-  map<string, double> metrics      = 3;
-  string              error        = 4;  // non-empty = execution failed
+  repeated EmitEvent  emissions       = 1;
+  repeated NoteUpdate note_updates    = 2;
+  map<string, double> metrics         = 3;
+  string              error           = 4;  // non-empty = execution failed
+  repeated LogEntry   logs            = 5;  // step + result logs for dashboard
+}
+
+message LogEntry {
+  string type      = 1;  // "step" | "result"
+  string content   = 2;
+  int64  timestamp = 3;  // unix millis
 }
 
 // --- shared types ---
